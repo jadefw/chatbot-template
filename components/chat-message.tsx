@@ -1,6 +1,6 @@
 "use client"
 
-import { type ChatUIMessage } from "@/tools"
+import { type ChatMessagePart, type ChatUIMessage } from "@/tools"
 import { AskUserPart } from "@/components/parts/ask-user-part"
 import { GithubRepoPart } from "@/components/parts/github-repo-part"
 import { SourcesPart } from "@/components/parts/sources-part"
@@ -36,7 +36,7 @@ export function ChatMessage({
   return (
     <Message align="start">
       <MessageContent>
-        {message.parts.map((part, index) => {
+        {mergeTextParts(message.parts).map((part, index) => {
           switch (part.type) {
             case "text":
               return <TextPart key={index} part={part} />
@@ -54,4 +54,20 @@ export function ChatMessage({
       </MessageContent>
     </Message>
   )
+}
+
+// Web search replies stream one text part per citation, so join them back
+// into one markdown document.
+function mergeTextParts(parts: ChatMessagePart[]) {
+  return parts
+    .filter((part) => part.type !== "source-url")
+    .reduce<ChatMessagePart[]>((merged, part) => {
+      const last = merged.at(-1)
+      if (part.type === "text" && last?.type === "text") {
+        merged[merged.length - 1] = { ...part, text: last.text + part.text }
+        return merged
+      }
+      merged.push(part)
+      return merged
+    }, [])
 }
