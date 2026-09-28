@@ -9,22 +9,6 @@ import { WebSearchPart } from "@/components/parts/web-search-part"
 import { Bubble, BubbleContent } from "@/components/ui/bubble"
 import { Message, MessageContent } from "@/components/ui/message"
 
-// Web search replies stream one text part per citation, so join them back
-// into one markdown document.
-function mergeTextParts(parts: ChatMessagePart[]) {
-  return parts
-    .filter((part) => part.type !== "source-url")
-    .reduce<ChatMessagePart[]>((merged, part) => {
-      const last = merged.at(-1)
-      if (part.type === "text" && last?.type === "text") {
-        merged[merged.length - 1] = { ...part, text: last.text + part.text }
-        return merged
-      }
-      merged.push(part)
-      return merged
-    }, [])
-}
-
 export function ChatMessage({
   message,
   isStreaming = false,
@@ -70,4 +54,20 @@ export function ChatMessage({
       </MessageContent>
     </Message>
   )
+}
+
+// Web search replies stream one text part per citation, so join them back
+// into one markdown document.
+function mergeTextParts(parts: ChatMessagePart[]) {
+  return parts
+    .filter((part) => part.type !== "source-url")
+    .reduce<ChatMessagePart[]>((merged, part) => {
+      const last = merged.at(-1)
+      if (part.type === "text" && last?.type === "text") {
+        merged[merged.length - 1] = { ...part, text: last.text + part.text }
+        return merged
+      }
+      merged.push(part)
+      return merged
+    }, [])
 }
