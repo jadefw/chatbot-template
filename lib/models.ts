@@ -13,9 +13,9 @@ export interface GoModel {
 }
 
 export const MODELS: GoModel[] = [
+  { id: "deepseek-v4-flash", name: "DeepSeek V4 Flash", protocol: "chat" },
   { id: "glm-5.3", name: "GLM 5.3", protocol: "chat" },
   { id: "kimi-k2.7-code", name: "Kimi K2.7 Code", protocol: "chat" },
-  { id: "deepseek-v4-flash", name: "DeepSeek V4 Flash", protocol: "chat" },
   {
     id: "muse-spark-1.3-contributor",
     name: "Muse Spark 1.3",
