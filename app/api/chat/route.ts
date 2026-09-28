@@ -8,17 +8,25 @@ import {
 } from "ai"
 
 import { DEFAULT_MODEL, isModelAllowed } from "@/lib/models"
+import { getGoModel } from "@/lib/opencode-go"
 import { getTools, type ChatUIMessage } from "@/tools"
 
 export const maxDuration = 30
 
 const MAX_OUTPUT_TOKENS = 8192
 
-// This endpoint is public and spends your AI Gateway credits on every request.
+// This endpoint is public and spends your OpenCode Go usage on every request.
 // Before exposing it to real traffic, add a rate limit (e.g. Vercel Firewall /
-// WAF or @upstash/ratelimit), authentication, and an AI Gateway spend limit.
-// See the README "Security" section.
+// WAF or @upstash/ratelimit) and authentication, and watch usage in the
+// OpenCode console.
 export async function POST(req: Request) {
+  if (!process.env.OPENCODE_GO_API_KEY) {
+    return Response.json(
+      { error: "Missing OPENCODE_GO_API_KEY. Add it to .env.local." },
+      { status: 503 }
+    )
+  }
+
   let body: unknown
   try {
     body = await req.json()
@@ -32,6 +40,25 @@ export async function POST(req: Request) {
   if (!isModelAllowed(modelId)) {
     return Response.json(
       { error: `Model ${modelId} is not available.` },
+      { status: 400 }
+    )
+  }
+
+  // Stable per-conversation id for Go's routing/prompt-caching
+  // (x-opencode-session). useChat sends its chat `id` in the body.
+  const rawSession =
+    (body as { id?: unknown })?.id ?? req.headers.get("x-opencode-session")
+  const sessionId =
+    typeof rawSession === "string" && rawSession.length > 0
+      ? rawSession
+      : crypto.randomUUID()
+
+  let languageModel
+  try {
+    languageModel = getGoModel(modelId, { sessionId })
+  } catch (error) {
+    return Response.json(
+      { error: error instanceof Error ? error.message : "Invalid model." },
       { status: 400 }
     )
   }
@@ -51,7 +78,7 @@ export async function POST(req: Request) {
   }
 
   const result = streamText({
-    model: modelId,
+    model: languageModel,
     messages: await convertToModelMessages(messages),
     tools,
     stopWhen: isStepCount(5),

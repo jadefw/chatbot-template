@@ -2,7 +2,7 @@
 
 import * as React from "react"
 
-import { type GatewayModel } from "@/lib/models"
+import { type GoModel } from "@/lib/models"
 import {
   Select,
   SelectContent,
@@ -17,7 +17,7 @@ export function ModelSelect({
   value,
   onValueChange,
 }: {
-  models: GatewayModel[]
+  models: GoModel[]
   value: string
   onValueChange: (value: string) => void
 }) {

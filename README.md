@@ -1,6 +1,6 @@
 # chatbot-template
 
-A minimal chatbot template built with Next.js, the [AI SDK](https://ai-sdk.dev), [shadcn/ui](https://ui.shadcn.com), [shadcn/react](https://ui.shadcn.com/docs/react/message-scroller), [shadcn/typeset](https://ui.shadcn.com/docs/typeset) and the [Vercel AI Gateway](https://vercel.com/docs/ai-gateway).
+A minimal chatbot template built with Next.js, the [AI SDK](https://ai-sdk.dev), [shadcn/ui](https://ui.shadcn.com), [shadcn/react](https://ui.shadcn.com/docs/react/message-scroller), [shadcn/typeset](https://ui.shadcn.com/docs/typeset) and [OpenCode Go](https://opencode.ai/docs/go/) models.
 
 <p>
   <a href="https://github.com/shadcn-ui/chatbot-template/stargazers"><img src="https://shieldcn.dev/github/stars/shadcn-ui/chatbot-template.svg?variant=secondary&size=xs" alt="GitHub stars" /></a>
@@ -19,7 +19,7 @@ A minimal chatbot template built with Next.js, the [AI SDK](https://ai-sdk.dev),
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fshadcn-ui%2Fchatbot-template&project-name=chatbot-template&repository-name=chatbot-template)
 
-That's it — no configuration needed. Vercel deployments authenticate to the AI Gateway automatically via OIDC, and usage runs on your team's [AI Gateway credits](https://vercel.com/docs/ai-gateway/pricing).
+Set `OPENCODE_GO_API_KEY` as an environment variable (e.g. on Vercel, in the project settings). Usage counts against your [OpenCode Go limits](https://opencode.ai/docs/go/#usage-limits).
 
 ## Local development
 
@@ -27,18 +27,11 @@ That's it — no configuration needed. Vercel deployments authenticate to the AI
 pnpm install
 ```
 
-Then give the app a gateway credential, either by pulling an OIDC token from your linked Vercel project:
-
-```bash
-vercel link
-vercel env pull
-```
-
-or by creating an API key in the Vercel dashboard (**AI Gateway → API Keys**) and adding it to `.env.local`:
+Then add your OpenCode Go API key (from the [OpenCode console](https://opencode.ai/auth)) to `.env.local`:
 
 ```bash
 cp .env.example .env.local
-# then set AI_GATEWAY_API_KEY=...
+# then set OPENCODE_GO_API_KEY=...
 ```
 
 Start the dev server:
@@ -49,18 +42,18 @@ pnpm dev
 
 ## Configuration
 
-| Env var              | Required       | Description                                                  |
-| -------------------- | -------------- | ------------------------------------------------------------ |
-| `AI_GATEWAY_API_KEY` | Local dev only | AI Gateway API key. Not needed on Vercel deployments (OIDC). |
+| Env var              | Required | Description                                    |
+| -------------------- | -------- | ---------------------------------------------- |
+| `OPENCODE_GO_API_KEY` | Yes      | OpenCode Go API key from the OpenCode console. |
 
 The model list lives in [lib/models.ts](lib/models.ts) — the first entry is the default model.
 
 ## Security
 
-The `/api/chat` route is **public and unauthenticated** — every request spends your AI Gateway credits. That's fine for a personal demo, but before putting it in front of real traffic you should:
+The `/api/chat` route is **public and unauthenticated** — every request spends your OpenCode Go usage. That's fine for a personal demo, but before putting it in front of real traffic you should:
 
-- **Rate limit it.** Add [Vercel Firewall / WAF](https://vercel.com/docs/security/vercel-waf) rules or [`@upstash/ratelimit`](https://github.com/upstash/ratelimit-js) so a single client can't drain your credits (denial-of-wallet).
-- **Cap spend.** Set an [AI Gateway spend limit](https://vercel.com/docs/ai-gateway/observability-and-spend/budgets) as a backstop.
+- **Rate limit it.** Add [Vercel Firewall / WAF](https://vercel.com/docs/security/vercel-waf) rules or [`@upstash/ratelimit`](https://github.com/upstash/ratelimit-js) so a single client can't drain your usage (denial-of-wallet).
+- **Watch usage** in the [OpenCode console](https://opencode.ai/auth) as a backstop.
 - **Add auth** if the chatbot isn't meant to be public.
 
 The route already validates the request body, restricts models to [lib/models.ts](lib/models.ts), caps output tokens and step count, and aborts generation on client disconnect — but those bound a single request, not overall volume.
